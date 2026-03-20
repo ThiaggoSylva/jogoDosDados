@@ -14,10 +14,10 @@ class Program
         {
             ExecutarJogo();
 
-            Console.Write("Deseja continuar? (s/N): ");
-            string? opcaoContinuar = Console.ReadLine()?.ToUpper();
+            Console.Write("\nDeseja continuar? (s/N): ");
+            string? opcao = Console.ReadLine()?.ToUpper();
 
-            if (opcaoContinuar != "S")
+            if (opcao != "S")
                 break;
         }
     }
@@ -26,29 +26,43 @@ class Program
     {
         int posicaoJogador = 0;
         int posicaoComputador = 0;
-        bool jogoEstaEmAndamento = true;
 
-        while (jogoEstaEmAndamento)
+        while (true)
         {
-            RodadaJogador(ref posicaoJogador);
+            bool rodadaExtra;
 
-            if (VerificarVitoria(posicaoJogador, "Jogador"))
-                break;
+            // Rodada do jogador
+            do
+            {
+                rodadaExtra = ExecutarRodada("Jogador", ref posicaoJogador, true);
 
-            RodadaComputador(ref posicaoComputador);
+                if (VerificarVitoria(posicaoJogador, "Jogador"))
+                    return;
 
-            if (VerificarVitoria(posicaoComputador, "Computador"))
-                break;
+            } while (rodadaExtra);
+
+            // Rodada do computador
+            do
+            {
+                rodadaExtra = ExecutarRodada("Computador", ref posicaoComputador, false);
+
+                if (VerificarVitoria(posicaoComputador, "Computador"))
+                    return;
+
+            } while (rodadaExtra);
         }
     }
 
-    static void RodadaJogador(ref int posicaoJogador)
+    static bool ExecutarRodada(string nome, ref int posicao, bool aguardarEntrada)
     {
         Console.Clear();
-        ExibirCabecalho("Rodada do Jogador");
+        ExibirCabecalho($"Rodada do {nome}");
 
-        Console.Write("Pressione ENTER para lançar um dado...");
-        Console.ReadLine();
+        if (aguardarEntrada)
+        {
+            Console.Write("Pressione ENTER para lançar o dado...");
+            Console.ReadLine();
+        }
 
         int resultado = LancarDado();
 
@@ -56,34 +70,21 @@ class Program
         Console.WriteLine($"O número sorteado foi: {resultado}");
         Console.WriteLine("-------------------------------------------");
 
-        posicaoJogador += resultado;
+        posicao += resultado;
 
-        posicaoJogador = VerificarEventos(posicaoJogador, "Você");
+        posicao = VerificarEventos(posicao);
 
-        Console.WriteLine($"\nVocê está na posição: {posicaoJogador} de {limiteLinhaChegada}");
+        Console.WriteLine($"\n{nome} está na posição: {posicao} de {limiteLinhaChegada}");
 
-        Console.Write("\nPressione ENTER para continuar...");
-        Console.ReadLine();
-    }
-
-    static void RodadaComputador(ref int posicaoComputador)
-    {
-        Console.Clear();
-        ExibirCabecalho("Rodada do Computador");
-
-        int resultado = LancarDado();
-
-        Console.WriteLine($"O número sorteado foi: {resultado}");
-        Console.WriteLine("-------------------------------------------");
-
-        posicaoComputador += resultado;
-
-        posicaoComputador = VerificarEventos(posicaoComputador, "O computador");
-
-        Console.WriteLine($"\nO computador está na posição: {posicaoComputador} de {limiteLinhaChegada}");
+        if (resultado == 6)
+        {
+            Console.WriteLine($"\n🎉 {nome} tirou 6 e ganhou uma rodada extra!");
+        }
 
         Console.Write("\nPressione ENTER para continuar...");
         Console.ReadLine();
+
+        return resultado == 6;
     }
 
     static int LancarDado()
@@ -91,7 +92,7 @@ class Program
         return RandomNumberGenerator.GetInt32(1, 7);
     }
 
-    static int VerificarEventos(int posicao, string jogador)
+    static int VerificarEventos(int posicao)
     {
         if (posicao == 5 || posicao == 10 || posicao == 15 || posicao == 25)
         {
@@ -111,7 +112,7 @@ class Program
     {
         if (posicao >= limiteLinhaChegada)
         {
-            Console.WriteLine($"\n{jogador} alcançou a linha de chegada!");
+            Console.WriteLine($"\n🏆 {jogador} alcançou a linha de chegada!");
 
             Console.Write("\nPressione ENTER para continuar...");
             Console.ReadLine();
